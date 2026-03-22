@@ -14,6 +14,7 @@ class IDManager:
 
 	@classmethod
 	def next_id(cls) -> int:
+		"""Return the next auto-increment integer ID."""
 		return next(cls._counter)
 
 
@@ -37,6 +38,7 @@ class Owner:
 	pet_ids: List[int] = field(default_factory=list)
 
 	def __post_init__(self) -> None:
+		"""Auto-assign an ID to the owner if none was provided."""
 		if self.id is None:
 			self.id = IDManager.next_id()
 
@@ -51,6 +53,7 @@ class Pet:
 	task_ids: List[int] = field(default_factory=list)
 
 	def __post_init__(self) -> None:
+		"""Auto-assign an ID to the pet if none was provided."""
 		if self.id is None:
 			self.id = IDManager.next_id()
 
@@ -58,6 +61,7 @@ class Pet:
 	tasks: List["Task"] = field(default_factory=list)
 
 	def add_task(self, task: "Task") -> None:
+		"""Attach a Task object to this Pet and record its id."""
 		if task.id is None:
 			task.__post_init__()
 		self.tasks.append(task)
@@ -65,6 +69,7 @@ class Pet:
 			self.task_ids.append(task.id)
 
 	def remove_task(self, task_id: int) -> bool:
+		"""Remove a Task by id; return True if removed."""
 		removed = False
 		self.tasks = [t for t in self.tasks if not (removed := (t.id == task_id))]
 		if task_id in self.task_ids:
@@ -72,9 +77,11 @@ class Pet:
 		return removed
 
 	def get_tasks(self) -> List["Task"]:
+		"""Return a copy of this pet's Task list."""
 		return list(self.tasks)
 
 	def pending_tasks(self) -> List["Task"]:
+		"""Return tasks for this pet that are not completed."""
 		return [t for t in self.tasks if not getattr(t, "completed", False)]
 
 
@@ -97,13 +104,16 @@ class Task:
 	completed: bool = False
 
 	def __post_init__(self) -> None:
+		"""Auto-assign an ID to the task if none was provided."""
 		if self.id is None:
 			self.id = IDManager.next_id()
 
 	def mark_complete(self) -> None:
+		"""Mark this task as completed."""
 		self.completed = True
 
 	def is_due(self, at: Optional[datetime] = None) -> bool:
+		"""Return True if the task is currently due (not completed and within window)."""
 		now = at or datetime.now()
 		if self.completed:
 			return False
@@ -114,6 +124,7 @@ class Task:
 		return True
 
 	def next_occurrence(self, after: Optional[datetime] = None) -> Optional[datetime]:
+		"""Compute the next occurrence datetime for a recurring task."""
 		if not self.recurring or not self.frequency_days:
 			return self.earliest_time
 		ref = after or (self.earliest_time or datetime.now())
@@ -135,6 +146,7 @@ class ScheduleEntry:
 	reason: Optional[str] = None
 
 	def __post_init__(self) -> None:
+		"""Auto-assign an ID to the schedule entry if absent."""
 		if self.id is None:
 			self.id = IDManager.next_id()
 
@@ -146,15 +158,12 @@ class Scheduler:
 	"""
 
 	def __init__(self) -> None:
+		"""Create a Scheduler with an in-memory schedule index."""
 		# lightweight in-memory index (not persisted)
 		self._entries: List[ScheduleEntry] = []
 
 	def generate_schedule(self, owner: Owner, pets: List[Pet], tasks: List[Task], day_window: Optional[TimeWindow] = None) -> List[ScheduleEntry]:
-		"""Generate a list of ScheduleEntry objects for the given owner, pets and tasks.
-
-		This is a stub. Implement a heuristic or constraint solver to respect
-		priorities, durations, and time windows.
-		"""
+		"""Generate schedule entries for the provided owner, pets, and tasks."""
 		# Simple greedy scheduler:
 		# - collect all incomplete tasks
 		# - respect earliest/latest and the optional day_window
