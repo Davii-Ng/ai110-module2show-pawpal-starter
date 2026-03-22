@@ -7,6 +7,38 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+There would be a total of four main class: Owner, Pet, Task. Scheduler
+
+class Owner:
+- personal information such as Name, Phone Number, Email
+- Pets names
+- Avalibility
+
+the Owner could have 1 or many pets
+
+class Pet:
+- Name
+- Type of animal
+- Upcoming tasks
+- Current tasks
+- Pickup time
+
+A pet can have multiple tasks
+
+class Task:
+- Type of task (walks, feeding, meds, enrichment, grooming, etc.)
+- Task duration
+- Pet assign
+- Priority
+- Task price
+
+A pet would have a schedule that contains many tasks
+
+class Schedule:
+- Task priority
+- Tasks 
+- Pet information 
+
 **b. Design changes**
 
 - Did your design change during implementation?
