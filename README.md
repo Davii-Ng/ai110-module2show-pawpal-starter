@@ -22,6 +22,10 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling
+
+This project adds several scheduling improvements: tasks can be sorted by next occurrence or an HH:MM string, filtered by pet or completion status, and recurring tasks are expanded lazily. The scheduler detects lightweight conflicts and will warn instead of crashing. Marking recurring tasks complete will automatically create the next occurrence.
+
 ## Getting started
 
 ### Setup

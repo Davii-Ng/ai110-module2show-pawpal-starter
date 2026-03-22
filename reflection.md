@@ -46,6 +46,8 @@ class Schedule:
 
 ---
 
+- Copilot indentifies that there are no ID management system, which may cause collision upon creating an object.q
+
 ## 2. Scheduling Logic and Tradeoffs
 
 **a. Constraints and priorities**
@@ -53,10 +55,18 @@ class Schedule:
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+The scheduler accounts for constraints such as task time windows (earliest and latest times within a day), task duration, provider availability to prevent overlapping assignments, task priority, pet assignment, and recurrence or completion status. Hard constraints—like time windows and provider availability—are enforced first to ensure tasks are feasible. 
+
+When conflicts arise among feasible tasks, priority determines the order of scheduling. Soft preferences, including owner availability and pet-specific needs, are considered afterward. This approach keeps the system simple, predictable, and effective for small-to-medium workloads.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+- Tradeoff: the scheduler uses a simple greedy/first-fit approach instead of an optimal global solver.
+
+- Why reasonable: greedy is fast and easy to implement, and it gives good enough schedules for small teams and typical daily workloads without heavy computation.
 
 ---
 
