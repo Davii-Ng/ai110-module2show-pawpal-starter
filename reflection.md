@@ -7,37 +7,18 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
-There would be a total of four main class: Owner, Pet, Task. Scheduler
 
-class Owner:
-- personal information such as Name, Phone Number, Email
-- Pets names
-- Avalibility
+My initial UML had four main classes: Owner, Pet, Task, and Scheduler.
 
-the Owner could have 1 or many pets
+Owner: stores owner profile info (name, phone, email), availability, and pet references.
+Pet: stores pet profile info (name, species, notes, pickup context) and associated tasks.
+Task: stores task details (type, duration, priority, cost, pet assignment, time constraints).
+Scheduler: generates a daily plan from tasks and constraints.
+Relationship assumptions:
 
-class Pet:
-- Name
-- Type of animal
-- Upcoming tasks
-- Current tasks
-- Pickup time
-
-A pet can have multiple tasks
-
-class Task:
-- Type of task (walks, feeding, meds, enrichment, grooming, etc.)
-- Task duration
-- Pet assign
-- Priority
-- Task price
-
-A pet would have a schedule that contains many tasks
-
-class Schedule:
-- Task priority
-- Tasks 
-- Pet information 
+One owner can have many pets.
+One pet can have many tasks.
+A schedule is produced from tasks and constraints rather than manually entered.
 
 **b. Design changes**
 
@@ -64,9 +45,16 @@ When conflicts arise among feasible tasks, priority determines the order of sche
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
-- Tradeoff: the scheduler uses a simple greedy/first-fit approach instead of an optimal global solver.
+A major tradeoff is using a greedy/first-fit strategy instead of a global optimization solver.
 
-- Why reasonable: greedy is fast and easy to implement, and it gives good enough schedules for small teams and typical daily workloads without heavy computation.
+Why this is reasonable:
+
+It is simple to implement and explain.
+Runtime is fast for small to medium workloads.
+It gives stable “good enough” results for the assignment scope.
+Limitation:
+
+Greedy decisions are local, so it can miss a globally better arrangement that would schedule more high-priority tasks.
 
 ---
 
