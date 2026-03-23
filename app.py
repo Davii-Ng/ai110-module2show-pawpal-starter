@@ -2,46 +2,158 @@ import streamlit as st
 from pawpal_systems import Owner, Pet, Task, Scheduler, TimeWindow
 from datetime import datetime
 from typing import List
+import pandas as pd
+import re
 
-st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
+st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="wide")
+
+st.markdown(
+        """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700&display=swap');
+
+:root {
+    --paw-bg-a: #fff6e8;
+    --paw-bg-b: #ffedd5;
+    --paw-surface: #fffaf2;
+    --paw-primary: #0f172a;
+    --paw-accent: #f97316;
+    --paw-accent-soft: #ffedd5;
+    --paw-muted: #334155;
+}
+
+.stApp,
+.stApp * {
+    font-family: 'Nunito', sans-serif;
+}
+
+h1, h2, h3 {
+    font-family: 'Baloo 2', cursive;
+    letter-spacing: 0.2px;
+    color: var(--paw-primary);
+}
+
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(circle at top right, #ffe1bd 0%, var(--paw-bg-a) 36%, var(--paw-bg-b) 100%);
+}
+
+[data-testid="stMainBlockContainer"] {
+    max-width: 1100px;
+    padding-top: 1.25rem;
+}
+
+[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
+    gap: 0.55rem;
+}
+
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li,
+label,
+[data-testid="stMetricValue"],
+[data-testid="stMetricLabel"],
+[data-testid="stCaptionContainer"] {
+    color: var(--paw-primary) !important;
+}
+
+[data-baseweb="input"] input,
+[data-baseweb="select"] div,
+[data-testid="stTextArea"] textarea {
+    color: var(--paw-primary) !important;
+}
+
+/* Force real form controls to stay readable across dark/light themes */
+[data-baseweb="input"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextArea"] textarea {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    border: 1px solid #f1c28e !important;
+    border-radius: 10px !important;
+}
+
+[data-baseweb="select"] > div {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #f1c28e !important;
+    border-radius: 10px !important;
+}
+
+/* Match button style to input fields */
+[data-testid="stButton"] button {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #f1c28e !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stButton"] button:hover {
+    background-color: #fff7ed !important;
+    border-color: #f3b374 !important;
+    color: #0f172a !important;
+}
+
+/* Keep placeholder/helper text readable against white input fields */
+[data-baseweb="input"] input::placeholder,
+[data-testid="stTextArea"] textarea::placeholder,
+[data-testid="stNumberInput"] input::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+}
+
+/* Ensure selected option labels in dropdowns are not washed out */
+[data-baseweb="select"] span,
+[data-baseweb="select"] p,
+[data-baseweb="select"] input {
+    color: var(--paw-primary) !important;
+}
+
+[data-baseweb="input"],
+[data-baseweb="select"] {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    border: 1px solid #f1c28e;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.paw-banner {
+    border: 1px solid #f3c38a;
+    background: linear-gradient(135deg, #fff1dc, var(--paw-accent-soft));
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+    color: var(--paw-primary);
+    margin-bottom: 0.5rem;
+    box-shadow: 0 8px 18px rgba(180, 93, 20, 0.08);
+}
+
+.paw-section-title {
+    font-family: 'Baloo 2', cursive;
+    color: var(--paw-primary);
+    font-size: 1.15rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+}
+
+[data-testid="stAlertContainer"] {
+    border-radius: 12px;
+}
+</style>
+""",
+        unsafe_allow_html=True,
+)
 
 st.title("🐾 PawPal+")
 
-st.markdown(
-    """
-Welcome to the PawPal+ starter app.
-
-This file is intentionally thin. It gives you a working Streamlit app so you can start quickly,
-but **it does not implement the project logic**. Your job is to design the system and build it.
-
-Use this app as your interactive demo once your backend classes/functions exist.
-"""
-)
-
-with st.expander("Scenario", expanded=True):
-    st.markdown(
-        """
-**PawPal+** is a pet care planning assistant. It helps a pet owner plan care tasks
-for their pet(s) based on constraints like time, priority, and preferences.
-
-You will design and implement the scheduling logic and connect it to this Streamlit UI.
-"""
-    )
-
-with st.expander("What you need to build", expanded=True):
-    st.markdown(
-        """
-At minimum, your system should:
-- Represent pet care tasks (what needs to happen, how long it takes, priority)
-- Represent the pet and the owner (basic info and preferences)
-- Build a plan/schedule for a day that chooses and orders tasks based on constraints
-- Explain the plan (why each task was chosen and when it happens)
-"""
-    )
-
 st.divider()
 
-st.subheader("Quick Demo Inputs (UI only)")
+st.markdown('<div class="paw-section-title">Owner and Pet Setup</div>', unsafe_allow_html=True)
 owner_name = st.text_input("Owner name", value="Jordan", key="owner_name_top")
 pet_name = st.text_input("Pet name", value="Mochi", key="pet_name_top")
 species = st.selectbox("Species", ["dog", "cat", "other"], key="species_top")
@@ -64,12 +176,12 @@ with owner_col:
         # Reuse existing Owner by name if present in session_state
         if owner_name in owners:
             st.session_state.owner = owners[owner_name]
-            st.info(f"Using existing owner: {st.session_state.owner.name} (id={st.session_state.owner.id})")
+            st.info(f"Using existing owner: {st.session_state.owner.name}")
         else:
             o = Owner(name=owner_name)
             owners[owner_name] = o
             st.session_state.owner = o
-            st.success(f"Owner created: {st.session_state.owner.name} (id={st.session_state.owner.id})")
+            st.success(f"Owner created: {st.session_state.owner.name}")
 
 with pet_col:
     pet_name = st.text_input("Pet name", value=pet_name, key="pet_name_col")
@@ -81,7 +193,7 @@ with pet_col:
             pet = Pet(name=pet_name, species=species)
             st.session_state.pets[pet.id] = pet
             st.session_state.owner.pet_ids.append(pet.id)
-            st.success(f"Added pet {pet.name} (id={pet.id})")
+            st.success(f"Added pet {pet.name}")
 
 st.markdown("### Tasks")
 col1, col2, col3 = st.columns(3)
@@ -127,19 +239,99 @@ if st.session_state.pets:
                 owner_name = st.session_state.owner.name
 
         pet_table.append({
-            "id": p.id,
             "name": p.name,
             "species": p.species,
             "tasks": len(p.get_tasks()),
             "owner": owner_name,
         })
 
-    st.table(pet_table)
+    st.dataframe(pd.DataFrame(pet_table), use_container_width=True, hide_index=True)
 
 st.divider()
 
 st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
+
+
+def collect_tasks_from_pets(pets: List[Pet]) -> List[Task]:
+    """Collect all tasks currently attached to pets."""
+    tasks: List[Task] = []
+    for pet in pets:
+        tasks.extend(pet.get_tasks())
+    return tasks
+
+
+def format_task_time(task: Task) -> str:
+    """Render earliest time or fallback to optional HH:MM time_str."""
+    if getattr(task, "earliest_time", None):
+        return task.earliest_time.strftime("%H:%M")
+    return getattr(task, "time_str", "-")
+
+
+def render_df(rows: List[dict]) -> None:
+    """Render tabular rows with consistent spacing and width."""
+    if not rows:
+        return
+    df = pd.DataFrame(rows)
+    st.dataframe(df, use_container_width=True, hide_index=True)
+
+
+def sanitize_text_for_ui(text: str) -> str:
+    """Hide internal numeric IDs in frontend-facing messages."""
+    cleaned = re.sub(r"\s*\(task\s+\d+\)", "", text, flags=re.IGNORECASE)
+    cleaned = re.sub(r"task\s+\d+", "task", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
+pets = list(st.session_state.pets.values()) if st.session_state.pets else []
+all_tasks = collect_tasks_from_pets(pets)
+scheduler = Scheduler()
+
+st.subheader("Task Board")
+if not all_tasks:
+    st.info("No tasks yet. Add a task to see sorted and filtered views.")
+else:
+    pet_filter_options = ["All pets"] + [p.name for p in pets]
+    selected_pet_name = st.selectbox("Filter by pet", pet_filter_options, key="filter_pet_name")
+    completed_label = st.selectbox("Completion", ["All", "Pending", "Completed"], key="filter_completed")
+    completed_map = {"All": None, "Pending": False, "Completed": True}
+    completed_filter = completed_map[completed_label]
+
+    if selected_pet_name == "All pets":
+        filtered_tasks = scheduler.filter_tasks(all_tasks, completed=completed_filter)
+    else:
+        filtered_tasks = scheduler.filter_tasks_by_pet_name(
+            all_tasks,
+            pets,
+            pet_name=selected_pet_name,
+            completed=completed_filter,
+        )
+
+    sorted_filtered_tasks = scheduler.sort_by_time(filtered_tasks)
+
+    task_rows = []
+    for task in sorted_filtered_tasks:
+        pet_name_for_task = next((p.name for p in pets if p.id == task.pet_id), "Unknown")
+        task_rows.append(
+            {
+                "time": format_task_time(task),
+                "task": task.type,
+                "pet": pet_name_for_task,
+                "duration_min": task.duration_minutes,
+                "priority": task.priority,
+                "status": "completed" if task.completed else "pending",
+            }
+        )
+
+    pending_count = sum(1 for t in sorted_filtered_tasks if not t.completed)
+    completed_count = sum(1 for t in sorted_filtered_tasks if t.completed)
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Visible Tasks", len(task_rows))
+    m2.metric("Pending", pending_count)
+    m3.metric("Completed", completed_count)
+
+    st.success(f"Showing {len(task_rows)} task(s), sorted chronologically.")
+    render_df(task_rows)
 
 if st.button("Generate schedule"):
     if st.session_state.owner is None:
@@ -147,24 +339,55 @@ if st.button("Generate schedule"):
     else:
         owner = st.session_state.owner
         pets = list(st.session_state.pets.values())
-        # collect all tasks from pets
-        tasks: List[Task] = []
-        for p in pets:
-            tasks.extend(p.get_tasks())
-
-        scheduler = Scheduler()
+        tasks = collect_tasks_from_pets(pets)
         # use a broad day window
         window = TimeWindow(start=datetime.now().replace(hour=6, minute=0, second=0, microsecond=0), end=datetime.now().replace(hour=20, minute=0, second=0, microsecond=0))
         schedule = scheduler.generate_schedule(owner, pets, tasks, day_window=window)
         explanations = scheduler.explain(schedule)
+        warnings = scheduler.detect_conflicts(schedule, tasks, pets)
 
-        st.subheader("Schedule")
-        for e in schedule:
-            if e.scheduled_start and e.scheduled_end:
-                t = next((tt for tt in tasks if tt.id == e.task_id), None)
-                pet_name = next((p.name for p in pets if p.id == (t.pet_id if t else None)), "Unknown")
-                st.write(f"- {e.scheduled_start.strftime('%H:%M')} - {e.scheduled_end.strftime('%H:%M')}: {t.type} for {pet_name}")
+        st.subheader("Today's Plan")
+        scheduled_rows = []
+        unscheduled_rows = []
+
+        for entry in schedule:
+            task = next((tt for tt in tasks if tt.id == entry.task_id), None)
+            pet_name_for_task = next((p.name for p in pets if p.id == (task.pet_id if task else None)), "Unknown")
+            if entry.scheduled_start and entry.scheduled_end:
+                scheduled_rows.append(
+                    {
+                        "start": entry.scheduled_start.strftime("%H:%M"),
+                        "end": entry.scheduled_end.strftime("%H:%M"),
+                        "task": task.type if task else "Unknown task",
+                        "pet": pet_name_for_task,
+                        "priority": task.priority if task else "-",
+                    }
+                )
             else:
-                t = next((tt for tt in tasks if tt.id == e.task_id), None)
-                pet_name = next((p.name for p in pets if p.id == (t.pet_id if t else None)), "Unknown")
-                st.write(f"- UNSCHEDULED: {t.type if t else e.task_id} for {pet_name} — {e.reason}")
+                unscheduled_rows.append(
+                    {
+                        "task": task.type if task else "Unknown task",
+                        "pet": pet_name_for_task,
+                        "reason": entry.reason or "not scheduled",
+                    }
+                )
+
+        if scheduled_rows:
+            st.success(f"Scheduled {len(scheduled_rows)} task(s) today.")
+            render_df(scheduled_rows)
+        else:
+            st.warning("No tasks could be scheduled in the current window.")
+
+        if unscheduled_rows:
+            st.warning(f"{len(unscheduled_rows)} task(s) could not be scheduled. Review reasons below.")
+            render_df(unscheduled_rows)
+
+        if warnings:
+            st.warning("Potential task conflicts were detected. Please review and adjust to avoid overlapping care times.")
+            with st.expander("Conflict details", expanded=True):
+                for warning in warnings:
+                    st.write(f"- {sanitize_text_for_ui(warning)}")
+
+        with st.expander("Why this schedule was chosen"):
+            explanation_rows = [{"explanation": sanitize_text_for_ui(reason)} for _, reason in explanations.items()]
+            render_df(explanation_rows)
