@@ -391,3 +391,16 @@ if st.button("Generate schedule"):
         with st.expander("Why this schedule was chosen"):
             explanation_rows = [{"explanation": sanitize_text_for_ui(reason)} for _, reason in explanations.items()]
             render_df(explanation_rows)
+
+        st.subheader("Next Available Slot Finder")
+        slot_duration = st.number_input(
+            "Duration needed (minutes)", min_value=5, max_value=240, value=30, key="slot_dur"
+        )
+        if st.button("Find next slot"):
+            slot = scheduler.find_next_available_slot(schedule, int(slot_duration), day_window=window)
+            if slot:
+                st.success(
+                    f"Available slot: {slot.start.strftime('%H:%M')} – {slot.end.strftime('%H:%M')}"
+                )
+            else:
+                st.warning("No open slot of that length exists in today's window.")

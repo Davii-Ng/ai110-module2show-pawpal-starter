@@ -152,6 +152,59 @@ def test_generate_schedule_skips_completed_tasks():
     assert entries[0].scheduled_start is not None
 
 
+def test_find_next_available_slot_in_gap():
+    scheduler = Scheduler()
+    base = datetime(2026, 1, 1, 8, 0)
+    window = TimeWindow(start=base, end=base + timedelta(hours=6))
+
+    schedule = [
+        ScheduleEntry(task_id=1, scheduled_start=base, scheduled_end=base + timedelta(minutes=30)),
+        ScheduleEntry(task_id=2, scheduled_start=base + timedelta(minutes=60), scheduled_end=base + timedelta(minutes=90)),
+    ]
+
+    slot = scheduler.find_next_available_slot(schedule, duration_minutes=20, day_window=window)
+    assert slot is not None
+    assert slot.start == base + timedelta(minutes=30)
+    assert slot.end == base + timedelta(minutes=50)
+
+
+def test_find_next_available_slot_after_last_entry():
+    scheduler = Scheduler()
+    base = datetime(2026, 1, 1, 8, 0)
+    window = TimeWindow(start=base, end=base + timedelta(hours=6))
+
+    schedule = [
+        ScheduleEntry(task_id=1, scheduled_start=base, scheduled_end=base + timedelta(minutes=30)),
+    ]
+
+    slot = scheduler.find_next_available_slot(schedule, duration_minutes=60, day_window=window)
+    assert slot is not None
+    assert slot.start == base + timedelta(minutes=30)
+
+
+def test_find_next_available_slot_returns_none_when_full():
+    scheduler = Scheduler()
+    base = datetime(2026, 1, 1, 8, 0)
+    window = TimeWindow(start=base, end=base + timedelta(minutes=60))
+
+    schedule = [
+        ScheduleEntry(task_id=1, scheduled_start=base, scheduled_end=base + timedelta(minutes=60)),
+    ]
+
+    slot = scheduler.find_next_available_slot(schedule, duration_minutes=30, day_window=window)
+    assert slot is None
+
+
+def test_find_next_available_slot_empty_schedule():
+    scheduler = Scheduler()
+    base = datetime(2026, 1, 1, 8, 0)
+    window = TimeWindow(start=base, end=base + timedelta(hours=2))
+
+    slot = scheduler.find_next_available_slot([], duration_minutes=30, day_window=window)
+    assert slot is not None
+    assert slot.start == base
+
+
 def test_sort_by_time_puts_invalid_time_str_last():
     scheduler = Scheduler()
     base = datetime(2026, 1, 1, 8, 0)

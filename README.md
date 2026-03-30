@@ -51,7 +51,9 @@ This project adds several scheduling improvements: tasks can be sorted by next o
 
 Add your final Streamlit screenshot at `assets/pawpal-demo.png`, then this section will render it in GitHub:
 
-![PawPal+ Streamlit Demo](image.png)
+![PawPal+ Streamlit Demo](assets/uml_final.png)
+
+![PawPal+ Screenshot](assets/image.png)
 
 Suggested capture: show the Task Board and Today's Plan sections with at least one conflict warning and one scheduled task.
 

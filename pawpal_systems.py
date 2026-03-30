@@ -481,6 +481,53 @@ class Scheduler:
 		self._entries = entries
 		return entries
 
+	def find_next_available_slot(
+		self,
+		schedule: List[ScheduleEntry],
+		duration_minutes: int,
+		day_window: Optional[TimeWindow] = None,
+	) -> Optional[TimeWindow]:
+		"""Find the earliest open slot of at least `duration_minutes` minutes.
+
+		Scans the existing schedule entries for gaps that can fit the
+		requested duration. If `day_window` is provided the search is
+		bounded to that window; otherwise it uses the span of existing
+		entries (or returns None if the schedule is empty and no window is
+		given).
+
+		Returns a TimeWindow representing the available slot, or None if no
+		slot of the required length exists within the search bounds.
+		"""
+		scheduled = sorted(
+			[e for e in schedule if e.scheduled_start and e.scheduled_end],
+			key=lambda e: e.scheduled_start,
+		)
+		needed = timedelta(minutes=duration_minutes)
+
+		if day_window:
+			search_start = day_window.start
+			search_end = day_window.end
+		elif scheduled:
+			search_start = scheduled[0].scheduled_start
+			search_end = scheduled[-1].scheduled_end + timedelta(hours=2)
+		else:
+			return None
+
+		# Check gap before the first entry
+		cursor = search_start
+		for entry in scheduled:
+			gap_end = entry.scheduled_start
+			if gap_end - cursor >= needed:
+				return TimeWindow(start=cursor, end=cursor + needed)
+			# advance cursor past this entry
+			cursor = max(cursor, entry.scheduled_end)
+
+		# Check gap after the last entry
+		if search_end - cursor >= needed:
+			return TimeWindow(start=cursor, end=cursor + needed)
+
+		return None
+
 	def explain(self, schedule: List[ScheduleEntry]) -> Dict[int, str]:
 		"""Produce human-readable explanations for each schedule entry.
 
