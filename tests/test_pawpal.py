@@ -33,6 +33,18 @@ def test_sorting_correctness_returns_chronological_order():
     assert [t.id for t in sorted_tasks] == [t_early.id, t_mid.id, t_late.id]
 
 
+def test_sorting_by_priority_first_then_time():
+    scheduler = Scheduler()
+    base = datetime(2026, 1, 1, 8, 0)
+
+    t_early_low = Task(type="Grooming", duration_minutes=15, priority=1, earliest_time=base)
+    t_late_high = Task(type="Meds", duration_minutes=5, priority=3, earliest_time=base + timedelta(hours=2))
+    t_mid_med = Task(type="Feed", duration_minutes=10, priority=2, earliest_time=base + timedelta(hours=1))
+
+    sorted_tasks = scheduler.sort_tasks_by_time([t_early_low, t_late_high, t_mid_med])
+    assert [t.id for t in sorted_tasks] == [t_late_high.id, t_mid_med.id, t_early_low.id]
+
+
 def test_recurrence_daily_task_creates_next_day_on_complete():
     completed_at = datetime(2026, 1, 1, 9, 0)
     daily = Task(

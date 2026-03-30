@@ -1,0 +1,197 @@
+{
+  "owner": {
+    "id": 1,
+    "name": "Jordan",
+    "phone": null,
+    "email": null,
+    "pet_ids": [
+      2,
+      3
+    ]
+  },
+  "pets": [
+    {
+      "id": 2,
+      "name": "Mochi",
+      "species": "dog",
+      "pickup_time": null,
+      "notes": null,
+      "tasks": [
+        {
+          "id": 4,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 2,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 5,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 2,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "assa",
+      "species": "other",
+      "pickup_time": null,
+      "notes": null,
+      "tasks": [
+        {
+          "id": 6,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 7,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 8,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 9,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 10,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 11,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 12,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 13,
+          "type": "Morning walk",
+          "duration_minutes": 25,
+          "priority": 2,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 14,
+          "type": "Morning walk",
+          "duration_minutes": 25,
+          "priority": 1,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        }
+      ]
+    }
+  ]
+}

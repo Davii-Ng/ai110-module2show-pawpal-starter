@@ -143,3 +143,27 @@ PawPal+ now persists all owner, pet, and task data to `data.json` so everything 
 2. **Implementation** -- Agent Mode wrote `save_to_json` and `load_from_json` functions in `pawpal_systems.py` with helper converters for each dataclass, including ID counter restoration to prevent duplicate IDs after reload.
 3. **App integration** -- Agent Mode updated `app.py` to auto-load from `data.json` on startup and auto-save after every owner/pet/task creation.
 4. **Testing** -- Agent Mode added two pytest cases: a full round-trip test (save then load, verify all fields including datetimes) and a missing-file safety test. All 16 tests pass.
+
+## Challenge 3: Advanced Priority Scheduling and UI
+
+### Priority-Based Scheduling
+
+The `Scheduler.sort_tasks_by_time` and `Scheduler.sort_by_time` methods now sort **by priority first (high to low), then by time**. Previously they sorted by time first with priority as a tiebreaker. This means high-priority tasks always appear at the top of the Task Board regardless of their scheduled time.
+
+### Emoji Color-Coding
+
+The Task Board table displays priority and status with emoji indicators:
+
+| Priority | Display |
+|----------|---------|
+| High (3) | 🔴 High |
+| Medium (2) | 🟡 Medium |
+| Low (1) | 🟢 Low |
+
+Task status also uses emojis: ✅ for completed, ⏳ for pending.
+
+### How Agent Mode Was Used
+
+1. **Sort logic update** -- Agent Mode updated both `sort_tasks_by_time` and `sort_by_time` in `pawpal_systems.py` to use `(-priority, time)` as the sort key instead of `(time, -priority)`.
+2. **UI enhancement** -- Agent Mode added a `PRIORITY_EMOJI` mapping in `app.py` to render priority levels with colored circle emojis, and replaced the text status column with emoji indicators.
+3. **Testing** -- Agent Mode added `test_sorting_by_priority_first_then_time` which creates tasks at different times with different priorities and verifies the high-priority task sorts first even though it has the latest time. All 17 tests pass.

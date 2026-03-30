@@ -320,6 +320,8 @@ else:
 
     sorted_filtered_tasks = scheduler.sort_by_time(filtered_tasks)
 
+    PRIORITY_EMOJI = {3: "\U0001f534 High", 2: "\U0001f7e1 Medium", 1: "\U0001f7e2 Low"}
+
     task_rows = []
     for task in sorted_filtered_tasks:
         pet_name_for_task = next((p.name for p in pets if p.id == task.pet_id), "Unknown")
@@ -329,8 +331,8 @@ else:
                 "task": task.type,
                 "pet": pet_name_for_task,
                 "duration_min": task.duration_minutes,
-                "priority": task.priority,
-                "status": "completed" if task.completed else "pending",
+                "priority": PRIORITY_EMOJI.get(task.priority, str(task.priority)),
+                "status": "\u2705" if task.completed else "\u23f3",
             }
         )
 

@@ -305,7 +305,7 @@ class Scheduler:
 		return res
 
 	def sort_tasks_by_time(self, tasks: List[Task]) -> List[Task]:
-		"""Stable sort of tasks by earliest occurrence time then by priority.
+		"""Stable sort of tasks by priority (high first), then by earliest occurrence time.
 
 		Recurring tasks are ordered by their next occurrence (if any).
 		"""
@@ -315,36 +315,35 @@ class Scheduler:
 				next_dt = t.next_occurrence()
 			else:
 				next_dt = t.earliest_time
-			# treat None as far past so tasks without time sort last
-			return ((next_dt or datetime.max), -t.priority)
+			# primary: priority descending; secondary: time ascending
+			return (-t.priority, (next_dt or datetime.max))
 		return sorted(tasks, key=key)
 
 	# convenience alias requested by callers
 	def sort_by_time(self, tasks: List[Task]) -> List[Task]:
-		"""Sort tasks by their next occurrence or a short `time_str`.
+		"""Sort tasks by priority (high first), then by time.
 
 		This helper prefers `earliest_time` when present. If a task exposes a
 		`time_str` attribute in "HH:MM" format it will be parsed into today's
 		wall time for ordering. Tasks without any time information sort last.
 
-		Returns a new list of tasks sorted from earliest to latest.
+		Returns a new list of tasks sorted by priority descending, then earliest to latest.
 		"""
-		# support tasks that may carry a `time_str` attribute
 		def adapt_key(t: Task):
-			# prefer earliest_time if available
+			# resolve time component
+			time_val = datetime.max
 			if getattr(t, "earliest_time", None):
-				return (t.earliest_time, -t.priority)
-			# try time_str
-			time_str = getattr(t, "time_str", None)
-			if isinstance(time_str, str):
-				try:
-					hh, mm = time_str.split(":")
-					tm = datetime.now().replace(hour=int(hh), minute=int(mm), second=0, microsecond=0)
-					return (tm, -t.priority)
-				except Exception:
-					pass
-			# fallback
-			return (datetime.max, -t.priority)
+				time_val = t.earliest_time
+			else:
+				time_str = getattr(t, "time_str", None)
+				if isinstance(time_str, str):
+					try:
+						hh, mm = time_str.split(":")
+						time_val = datetime.now().replace(hour=int(hh), minute=int(mm), second=0, microsecond=0)
+					except Exception:
+						pass
+			# primary: priority descending; secondary: time ascending
+			return (-t.priority, time_val)
 		return sorted(tasks, key=adapt_key)
 
 	def find_conflicts(self, schedule: List[ScheduleEntry]) -> List[tuple]:
