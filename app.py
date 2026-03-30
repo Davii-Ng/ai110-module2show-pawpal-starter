@@ -1,5 +1,8 @@
 import streamlit as st
-from pawpal_systems import Owner, Pet, Task, Scheduler, TimeWindow
+from pawpal_systems import Owner, Pet, Task, Scheduler, TimeWindow, save_to_json, load_from_json
+import os
+
+DATA_FILE = os.path.join(os.path.dirname(__file__), "data.json")
 from datetime import datetime
 from typing import List
 import pandas as pd
@@ -162,10 +165,15 @@ st.markdown("### Tasks")
 st.caption("Add a few tasks. In your final version, these should feed into your scheduler.")
 
 if "owner" not in st.session_state:
-    st.session_state.owner = None
+    saved_owner, saved_pets = load_from_json(DATA_FILE)
+    st.session_state.owner = saved_owner
+    st.session_state.pets = saved_pets
+    if saved_owner:
+        owners = st.session_state.setdefault("owners_by_name", {})
+        owners[saved_owner.name] = saved_owner
 
-if "pets" not in st.session_state:
-    st.session_state.pets = {}
+def _save():
+    save_to_json(DATA_FILE, st.session_state.owner, list(st.session_state.pets.values()))
 
 st.markdown("### Owner & Pets")
 owner_col, pet_col = st.columns(2)
@@ -181,6 +189,7 @@ with owner_col:
             o = Owner(name=owner_name)
             owners[owner_name] = o
             st.session_state.owner = o
+            _save()
             st.success(f"Owner created: {st.session_state.owner.name}")
 
 with pet_col:
@@ -193,6 +202,7 @@ with pet_col:
             pet = Pet(name=pet_name, species=species)
             st.session_state.pets[pet.id] = pet
             st.session_state.owner.pet_ids.append(pet.id)
+            _save()
             st.success(f"Added pet {pet.name}")
 
 st.markdown("### Tasks")
@@ -220,6 +230,7 @@ if st.button("Add task"):
         t = Task(type=task_title, duration_minutes=int(duration), priority=priority_map.get(priority, 2), pet_id=selected_pet_id)
         pet = st.session_state.pets[selected_pet_id]
         pet.add_task(t)
+        _save()
         st.success(f"Added task '{t.type}' to {pet.name}")
 
 if st.session_state.pets:

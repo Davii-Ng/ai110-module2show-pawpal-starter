@@ -542,6 +542,128 @@ class Scheduler:
 		return explanations
 
 
+def _dt_to_str(dt: Optional[datetime]) -> Optional[str]:
+	return dt.isoformat() if dt else None
+
+def _str_to_dt(s: Optional[str]) -> Optional[datetime]:
+	return datetime.fromisoformat(s) if s else None
+
+def _task_to_dict(t: Task) -> dict:
+	return {
+		"id": t.id,
+		"type": t.type,
+		"duration_minutes": t.duration_minutes,
+		"priority": t.priority,
+		"price": t.price,
+		"pet_id": t.pet_id,
+		"earliest_time": _dt_to_str(t.earliest_time),
+		"latest_time": _dt_to_str(t.latest_time),
+		"recurring": t.recurring,
+		"frequency_days": t.frequency_days,
+		"recurrence": t.recurrence,
+		"description": t.description,
+		"completed": t.completed,
+	}
+
+def _dict_to_task(d: dict) -> Task:
+	return Task(
+		id=d["id"],
+		type=d.get("type", ""),
+		duration_minutes=d.get("duration_minutes", 0),
+		priority=d.get("priority", 1),
+		price=d.get("price"),
+		pet_id=d.get("pet_id"),
+		earliest_time=_str_to_dt(d.get("earliest_time")),
+		latest_time=_str_to_dt(d.get("latest_time")),
+		recurring=d.get("recurring", False),
+		frequency_days=d.get("frequency_days"),
+		recurrence=d.get("recurrence"),
+		description=d.get("description"),
+		completed=d.get("completed", False),
+	)
+
+def _pet_to_dict(p: Pet) -> dict:
+	return {
+		"id": p.id,
+		"name": p.name,
+		"species": p.species,
+		"pickup_time": _dt_to_str(p.pickup_time),
+		"notes": p.notes,
+		"tasks": [_task_to_dict(t) for t in p.tasks],
+	}
+
+def _dict_to_pet(d: dict) -> Pet:
+	pet = Pet(
+		id=d["id"],
+		name=d.get("name", ""),
+		species=d.get("species"),
+		pickup_time=_str_to_dt(d.get("pickup_time")),
+		notes=d.get("notes"),
+	)
+	for td in d.get("tasks", []):
+		task = _dict_to_task(td)
+		pet.add_task(task)
+	return pet
+
+def _owner_to_dict(o: Owner) -> dict:
+	return {
+		"id": o.id,
+		"name": o.name,
+		"phone": o.phone,
+		"email": o.email,
+		"pet_ids": o.pet_ids,
+	}
+
+def _dict_to_owner(d: dict) -> Owner:
+	return Owner(
+		id=d["id"],
+		name=d.get("name", ""),
+		phone=d.get("phone"),
+		email=d.get("email"),
+		pet_ids=d.get("pet_ids", []),
+	)
+
+
+import json, os
+
+def save_to_json(filepath: str, owner: Optional[Owner], pets: List[Pet]) -> None:
+	"""Persist the current owner and pets (with their tasks) to a JSON file."""
+	data = {
+		"owner": _owner_to_dict(owner) if owner else None,
+		"pets": [_pet_to_dict(p) for p in pets],
+	}
+	with open(filepath, "w") as f:
+		json.dump(data, f, indent=2)
+
+def load_from_json(filepath: str) -> tuple:
+	"""Load owner and pets from a JSON file.
+
+	Returns (owner, pets_dict) where pets_dict maps pet.id -> Pet.
+	Returns (None, {}) if the file does not exist or is empty.
+	"""
+	if not os.path.exists(filepath):
+		return None, {}
+	with open(filepath, "r") as f:
+		data = json.load(f)
+	owner = _dict_to_owner(data["owner"]) if data.get("owner") else None
+	pets = {}
+	max_id = 0
+	for pd_item in data.get("pets", []):
+		pet = _dict_to_pet(pd_item)
+		pets[pet.id] = pet
+		if pet.id and pet.id > max_id:
+			max_id = pet.id
+		for t in pet.tasks:
+			if t.id and t.id > max_id:
+				max_id = t.id
+	if owner and owner.id and owner.id > max_id:
+		max_id = owner.id
+	# advance the ID counter past any loaded IDs to avoid collisions
+	if max_id > 0:
+		IDManager._counter = itertools.count(max_id + 1)
+	return owner, pets
+
+
 __all__ = [
 	"IDManager",
 	"TimeWindow",
@@ -550,5 +672,7 @@ __all__ = [
 	"Task",
 	"ScheduleEntry",
 	"Scheduler",
+	"save_to_json",
+	"load_from_json",
 ]
 

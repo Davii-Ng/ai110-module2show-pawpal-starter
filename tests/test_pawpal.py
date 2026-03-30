@@ -1,6 +1,8 @@
+import os
+import tempfile
 from datetime import datetime, timedelta
 
-from pawpal_systems import Owner, Pet, ScheduleEntry, Scheduler, Task, TimeWindow
+from pawpal_systems import Owner, Pet, ScheduleEntry, Scheduler, Task, TimeWindow, save_to_json, load_from_json
 
 
 def test_task_mark_complete():
@@ -217,3 +219,46 @@ def test_sort_by_time_puts_invalid_time_str_last():
 
     assert sorted_tasks[0].id == timed.id
     assert sorted_tasks[-1].id == malformed.id
+
+
+def test_save_and_load_json_round_trip():
+    owner = Owner(name="TestOwner")
+    pet = Pet(name="Rex", species="dog")
+    task = Task(
+        type="Walk",
+        duration_minutes=30,
+        priority=3,
+        pet_id=pet.id,
+        earliest_time=datetime(2026, 3, 1, 9, 0),
+    )
+    pet.add_task(task)
+    owner.pet_ids.append(pet.id)
+
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+        path = f.name
+
+    try:
+        save_to_json(path, owner, [pet])
+        loaded_owner, loaded_pets = load_from_json(path)
+
+        assert loaded_owner is not None
+        assert loaded_owner.name == "TestOwner"
+        assert loaded_owner.id == owner.id
+
+        assert pet.id in loaded_pets
+        loaded_pet = loaded_pets[pet.id]
+        assert loaded_pet.name == "Rex"
+        assert len(loaded_pet.tasks) == 1
+
+        loaded_task = loaded_pet.tasks[0]
+        assert loaded_task.type == "Walk"
+        assert loaded_task.duration_minutes == 30
+        assert loaded_task.earliest_time == datetime(2026, 3, 1, 9, 0)
+    finally:
+        os.unlink(path)
+
+
+def test_load_from_json_missing_file():
+    owner, pets = load_from_json("/nonexistent/path/data.json")
+    assert owner is None
+    assert pets == {}
