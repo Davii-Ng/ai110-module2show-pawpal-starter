@@ -167,3 +167,42 @@ Task status also uses emojis: ✅ for completed, ⏳ for pending.
 1. **Sort logic update** -- Agent Mode updated both `sort_tasks_by_time` and `sort_by_time` in `pawpal_systems.py` to use `(-priority, time)` as the sort key instead of `(time, -priority)`.
 2. **UI enhancement** -- Agent Mode added a `PRIORITY_EMOJI` mapping in `app.py` to render priority levels with colored circle emojis, and replaced the text status column with emoji indicators.
 3. **Testing** -- Agent Mode added `test_sorting_by_priority_first_then_time` which creates tasks at different times with different priorities and verifies the high-priority task sorts first even though it has the latest time. All 17 tests pass.
+
+## Challenge 4: Professional UI and Output Formatting
+
+### Task-Type Emojis
+
+Every task in the Task Board and Today's Plan displays a context-aware emoji based on its type keyword:
+
+| Keyword | Emoji | Keyword | Emoji |
+|---------|-------|---------|-------|
+| walk | 🚶 | feed/feeding | 🍕 |
+| meds/medication | 💊 | grooming | ✂️ |
+| enrichment/play | 🎾 | training | 🎯 |
+| vet | 🏥 | bath | 🛁 |
+| (other) | 📋 | | |
+
+### Species Emojis
+
+The pet table and schedule rows show species-specific emojis (🐶 dog, 🐱 cat, 🐾 other) next to pet names for quick visual identification.
+
+### Schedule Utilization Bar
+
+After generating a schedule, a progress bar shows how much of the day window is filled (e.g., "60 of 840 minutes (7%)"), giving owners an at-a-glance sense of how busy their day is.
+
+### Styled Conflict Cards
+
+Conflict warnings now render as orange-bordered cards (`paw-card-warn` CSS class) instead of plain bullet points, making them visually distinct and harder to miss.
+
+### Status and Reason Icons
+
+- Task status: ✅ Done / ⏳ Pending
+- Unscheduled reasons: ⏰ (missed deadline), 🚫 (outside window), ⚠️ (other)
+- Schedule times display as a single "start – end" column for cleaner layout
+
+### How Agent Mode Was Used
+
+1. **Emoji system** -- Agent Mode designed a keyword-matching function (`_task_emoji`) and lookup tables (`TASK_TYPE_EMOJI`, `SPECIES_EMOJI`) that map task types and pet species to appropriate emojis without requiring changes to the data model.
+2. **UI overhaul** -- Agent Mode updated all table-rendering code in `app.py` to incorporate emojis into the task, pet, and schedule displays, merged start/end time into a single column, and added the utilization progress bar.
+3. **CSS styling** -- Agent Mode added `paw-card` and `paw-card-warn` CSS classes for styled conflict cards and an accent color override for the progress bar.
+4. **Verification** -- All 17 tests pass. The formatting changes are purely presentational and do not affect scheduling logic.

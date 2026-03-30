@@ -3,6 +3,39 @@ from pawpal_systems import Owner, Pet, Task, Scheduler, TimeWindow, save_to_json
 import os
 
 DATA_FILE = os.path.join(os.path.dirname(__file__), "data.json")
+
+TASK_TYPE_EMOJI = {
+    "walk": "\U0001f6b6",
+    "feeding": "\U0001f355",
+    "feed": "\U0001f355",
+    "meds": "\U0001f48a",
+    "medication": "\U0001f48a",
+    "grooming": "\u2702\ufe0f",
+    "enrichment": "\U0001f3be",
+    "play": "\U0001f3be",
+    "training": "\U0001f3af",
+    "vet": "\U0001f3e5",
+    "bath": "\U0001f6c1",
+}
+
+SPECIES_EMOJI = {
+    "dog": "\U0001f436",
+    "cat": "\U0001f431",
+    "other": "\U0001f43e",
+}
+
+PRIORITY_EMOJI = {3: "\U0001f534 High", 2: "\U0001f7e1 Medium", 1: "\U0001f7e2 Low"}
+
+
+def _task_emoji(task_type: str) -> str:
+    """Return an emoji for a task type based on keyword matching."""
+    lower = task_type.lower()
+    for keyword, emoji in TASK_TYPE_EMOJI.items():
+        if keyword in lower:
+            return emoji
+    return "\U0001f4cb"
+
+
 from datetime import datetime
 from typing import List
 import pandas as pd
@@ -147,6 +180,24 @@ label,
 [data-testid="stAlertContainer"] {
     border-radius: 12px;
 }
+
+.paw-card {
+    background: var(--paw-surface);
+    border: 1px solid #f1c28e;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(180, 93, 20, 0.06);
+}
+
+.paw-card-warn {
+    background: #fff8ee;
+    border-left: 4px solid #f97316;
+}
+
+[data-testid="stProgress"] > div > div {
+    background-color: #f97316 !important;
+}
 </style>
 """,
         unsafe_allow_html=True,
@@ -250,7 +301,7 @@ if st.session_state.pets:
                 owner_name = st.session_state.owner.name
 
         pet_table.append({
-            "name": p.name,
+            "pet": f"{SPECIES_EMOJI.get(p.species, '\U0001f43e')} {p.name}",
             "species": p.species,
             "tasks": len(p.get_tasks()),
             "owner": owner_name,
@@ -320,19 +371,18 @@ else:
 
     sorted_filtered_tasks = scheduler.sort_by_time(filtered_tasks)
 
-    PRIORITY_EMOJI = {3: "\U0001f534 High", 2: "\U0001f7e1 Medium", 1: "\U0001f7e2 Low"}
-
     task_rows = []
     for task in sorted_filtered_tasks:
         pet_name_for_task = next((p.name for p in pets if p.id == task.pet_id), "Unknown")
+        pet_species = next((p.species for p in pets if p.id == task.pet_id), "other")
         task_rows.append(
             {
                 "time": format_task_time(task),
-                "task": task.type,
-                "pet": pet_name_for_task,
-                "duration_min": task.duration_minutes,
+                "task": f"{_task_emoji(task.type)} {task.type}",
+                "pet": f"{SPECIES_EMOJI.get(pet_species, chr(0x1f43e))} {pet_name_for_task}",
+                "duration": f"{task.duration_minutes} min",
                 "priority": PRIORITY_EMOJI.get(task.priority, str(task.priority)),
-                "status": "\u2705" if task.completed else "\u23f3",
+                "status": "\u2705 Done" if task.completed else "\u23f3 Pending",
             }
         )
 
@@ -343,7 +393,7 @@ else:
     m2.metric("Pending", pending_count)
     m3.metric("Completed", completed_count)
 
-    st.success(f"Showing {len(task_rows)} task(s), sorted chronologically.")
+    st.success(f"Showing {len(task_rows)} task(s), sorted by priority then time.")
     render_df(task_rows)
 
 if st.button("Generate schedule"):
@@ -353,67 +403,101 @@ if st.button("Generate schedule"):
         owner = st.session_state.owner
         pets = list(st.session_state.pets.values())
         tasks = collect_tasks_from_pets(pets)
-        # use a broad day window
         window = TimeWindow(start=datetime.now().replace(hour=6, minute=0, second=0, microsecond=0), end=datetime.now().replace(hour=20, minute=0, second=0, microsecond=0))
         schedule = scheduler.generate_schedule(owner, pets, tasks, day_window=window)
         explanations = scheduler.explain(schedule)
         warnings = scheduler.detect_conflicts(schedule, tasks, pets)
+        st.session_state.last_schedule = schedule
+        st.session_state.last_explanations = explanations
+        st.session_state.last_warnings = warnings
+        st.session_state.last_window = window
+        st.session_state.last_tasks = tasks
+        st.session_state.last_pets = pets
 
-        st.subheader("Today's Plan")
-        scheduled_rows = []
-        unscheduled_rows = []
+# Render schedule results if they exist (persists across reruns)
+if "last_schedule" in st.session_state and st.session_state.last_schedule is not None:
+    schedule = st.session_state.last_schedule
+    explanations = st.session_state.last_explanations
+    warnings = st.session_state.last_warnings
+    window = st.session_state.last_window
+    sched_tasks = st.session_state.last_tasks
+    sched_pets = st.session_state.last_pets
 
-        for entry in schedule:
-            task = next((tt for tt in tasks if tt.id == entry.task_id), None)
-            pet_name_for_task = next((p.name for p in pets if p.id == (task.pet_id if task else None)), "Unknown")
-            if entry.scheduled_start and entry.scheduled_end:
-                scheduled_rows.append(
-                    {
-                        "start": entry.scheduled_start.strftime("%H:%M"),
-                        "end": entry.scheduled_end.strftime("%H:%M"),
-                        "task": task.type if task else "Unknown task",
-                        "pet": pet_name_for_task,
-                        "priority": task.priority if task else "-",
-                    }
-                )
-            else:
-                unscheduled_rows.append(
-                    {
-                        "task": task.type if task else "Unknown task",
-                        "pet": pet_name_for_task,
-                        "reason": entry.reason or "not scheduled",
-                    }
-                )
+    st.subheader("\U0001f4c5 Today's Plan")
+    scheduled_rows = []
+    unscheduled_rows = []
+    total_scheduled_min = 0
 
-        if scheduled_rows:
-            st.success(f"Scheduled {len(scheduled_rows)} task(s) today.")
-            render_df(scheduled_rows)
+    REASON_ICON = {
+        "cannot meet latest_time": "\u23f0",
+        "outside day window": "\U0001f6ab",
+    }
+
+    for entry in schedule:
+        task = next((tt for tt in sched_tasks if tt.id == entry.task_id), None)
+        pet_obj = next((p for p in sched_pets if p.id == (task.pet_id if task else None)), None)
+        pet_label = f"{SPECIES_EMOJI.get(pet_obj.species, chr(0x1f43e))} {pet_obj.name}" if pet_obj else "Unknown"
+        task_label = f"{_task_emoji(task.type)} {task.type}" if task else "Unknown task"
+        if entry.scheduled_start and entry.scheduled_end:
+            total_scheduled_min += (entry.scheduled_end - entry.scheduled_start).seconds // 60
+            scheduled_rows.append(
+                {
+                    "time": f"{entry.scheduled_start.strftime('%H:%M')} \u2013 {entry.scheduled_end.strftime('%H:%M')}",
+                    "task": task_label,
+                    "pet": pet_label,
+                    "priority": PRIORITY_EMOJI.get(task.priority, "-") if task else "-",
+                }
+            )
         else:
-            st.warning("No tasks could be scheduled in the current window.")
+            reason_text = entry.reason or "not scheduled"
+            icon = next((v for k, v in REASON_ICON.items() if k in reason_text), "\u26a0\ufe0f")
+            unscheduled_rows.append(
+                {
+                    "task": task_label,
+                    "pet": pet_label,
+                    "reason": f"{icon} {reason_text}",
+                }
+            )
 
-        if unscheduled_rows:
-            st.warning(f"{len(unscheduled_rows)} task(s) could not be scheduled. Review reasons below.")
-            render_df(unscheduled_rows)
+    # Utilization progress bar
+    window_minutes = (window.end - window.start).seconds // 60
+    if window_minutes > 0:
+        utilization = min(total_scheduled_min / window_minutes, 1.0)
+        st.caption(f"\U0001f4ca Schedule utilization: {total_scheduled_min} of {window_minutes} minutes ({utilization:.0%})")
+        st.progress(utilization)
 
-        if warnings:
-            st.warning("Potential task conflicts were detected. Please review and adjust to avoid overlapping care times.")
-            with st.expander("Conflict details", expanded=True):
-                for warning in warnings:
-                    st.write(f"- {sanitize_text_for_ui(warning)}")
+    if scheduled_rows:
+        st.success(f"\u2705 Scheduled {len(scheduled_rows)} task(s) today.")
+        render_df(scheduled_rows)
+    else:
+        st.warning("No tasks could be scheduled in the current window.")
 
-        with st.expander("Why this schedule was chosen"):
-            explanation_rows = [{"explanation": sanitize_text_for_ui(reason)} for _, reason in explanations.items()]
-            render_df(explanation_rows)
+    if unscheduled_rows:
+        st.warning(f"\u26a0\ufe0f {len(unscheduled_rows)} task(s) could not be scheduled.")
+        render_df(unscheduled_rows)
 
-        st.subheader("Next Available Slot Finder")
-        slot_duration = st.number_input(
-            "Duration needed (minutes)", min_value=5, max_value=240, value=30, key="slot_dur"
-        )
-        if st.button("Find next slot"):
-            slot = scheduler.find_next_available_slot(schedule, int(slot_duration), day_window=window)
-            if slot:
-                st.success(
-                    f"Available slot: {slot.start.strftime('%H:%M')} – {slot.end.strftime('%H:%M')}"
+    if warnings:
+        st.warning("\U0001f4a5 Potential task conflicts detected! Review and adjust to avoid overlapping care times.")
+        with st.expander("Conflict details", expanded=True):
+            for warning in warnings:
+                st.markdown(
+                    f'<div class="paw-card paw-card-warn">\u26a0\ufe0f {sanitize_text_for_ui(warning)}</div>',
+                    unsafe_allow_html=True,
                 )
-            else:
-                st.warning("No open slot of that length exists in today's window.")
+
+    with st.expander("Why this schedule was chosen"):
+        explanation_rows = [{"explanation": sanitize_text_for_ui(reason)} for _, reason in explanations.items()]
+        render_df(explanation_rows)
+
+    st.subheader("Next Available Slot Finder")
+    slot_duration = st.number_input(
+        "Duration needed (minutes)", min_value=5, max_value=240, value=30, key="slot_dur"
+    )
+    if st.button("Find next slot"):
+        slot = scheduler.find_next_available_slot(schedule, int(slot_duration), day_window=window)
+        if slot:
+            st.success(
+                f"Available slot: {slot.start.strftime('%H:%M')} \u2013 {slot.end.strftime('%H:%M')}"
+            )
+        else:
+            st.warning("No open slot of that length exists in today's window.")

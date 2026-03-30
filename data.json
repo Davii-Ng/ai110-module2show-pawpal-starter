@@ -6,7 +6,9 @@
     "email": null,
     "pet_ids": [
       2,
-      3
+      3,
+      16,
+      19
     ]
   },
   "pets": [
@@ -34,6 +36,21 @@
         },
         {
           "id": 5,
+          "type": "Morning walk",
+          "duration_minutes": 20,
+          "priority": 3,
+          "price": null,
+          "pet_id": 2,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 15,
           "type": "Morning walk",
           "duration_minutes": 20,
           "priority": 3,
@@ -183,6 +200,61 @@
           "priority": 1,
           "price": null,
           "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        },
+        {
+          "id": 20,
+          "type": "Morning walk",
+          "duration_minutes": 19,
+          "priority": 3,
+          "price": null,
+          "pet_id": 3,
+          "earliest_time": null,
+          "latest_time": null,
+          "recurring": false,
+          "frequency_days": null,
+          "recurrence": null,
+          "description": null,
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Mochi",
+      "species": "cat",
+      "pickup_time": null,
+      "notes": null,
+      "tasks": []
+    },
+    {
+      "id": 18,
+      "name": "Mochi",
+      "species": "cat",
+      "pickup_time": null,
+      "notes": null,
+      "tasks": []
+    },
+    {
+      "id": 19,
+      "name": "Mochi",
+      "species": "cat",
+      "pickup_time": null,
+      "notes": null,
+      "tasks": [
+        {
+          "id": 21,
+          "type": "Morning walk",
+          "duration_minutes": 19,
+          "priority": 3,
+          "price": null,
+          "pet_id": 19,
           "earliest_time": null,
           "latest_time": null,
           "recurring": false,
